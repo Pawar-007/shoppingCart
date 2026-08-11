@@ -28,10 +28,6 @@ public class UserServiceImpl implements UserService{
 		if (userRepository.existsByEmail(user.getEmail())) {
 	        throw new RuntimeException("Email already registered");
 	    }
-		
-		if(user.getRole()==null) {
-			user.setRole(Role.CUSTOMER);
-		}
 	
 		User savedUser = userRepository.save(user);
 
@@ -124,7 +120,9 @@ public class UserServiceImpl implements UserService{
 	}
 	
 	@Override
-	public User createAdmin(User user) {
+	public RegisterResponse createAdmin(User user) {
+		
+		
 
 	    if (userRepository.existsByEmail(user.getEmail())) {
 	        throw new RuntimeException("Email already registered");
@@ -132,7 +130,15 @@ public class UserServiceImpl implements UserService{
 
 	    user.setRole(Role.ADMIN);
 
-	    return userRepository.save(user);
+	    User savedUser=userRepository.save(user);
+	    return new RegisterResponse(
+	            savedUser.getUserId(),
+	            savedUser.getFirstName(),
+	            savedUser.getLastName(),
+	            savedUser.getEmail(),
+	            savedUser.getPhone(),
+	            savedUser.getRole() != null ? savedUser.getRole().name() : null
+	    );
 	}
 	
 }

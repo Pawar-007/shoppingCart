@@ -20,5 +20,5 @@ public interface UserService {
                         String newPassword);
 
     void deleteUser(Long userId);
-    public User createAdmin(User user);
+    public RegisterResponse createAdmin(User user);
 }

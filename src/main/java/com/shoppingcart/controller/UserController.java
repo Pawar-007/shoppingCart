@@ -5,10 +5,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.shoppingcart.DTO.JwtUser;
 import com.shoppingcart.DTO.LoginRequest;
 import com.shoppingcart.DTO.LoginResponse;
 import com.shoppingcart.DTO.RegisterResponse;
+import com.shoppingcart.enumerated.Role;
 import com.shoppingcart.model.User;
+import com.shoppingcart.service.JwtService;
 import com.shoppingcart.service.UserService;
 
 @RestController
@@ -18,6 +21,9 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private JwtService jwtService;
 
 
     // =========================
@@ -42,6 +48,37 @@ public class UserController {
         }
     }
 
+    @PostMapping("/createAdmin")
+    public ResponseEntity<?> createAdmin(@RequestHeader(value = "Authorization", required = false) String token,@RequestBody User user){
+        
+    	if(token == null || token.isBlank()) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body("Authorization token is missing");
+        }
+    	
+    	token = token.replace("Bearer ", "");
+    	
+    	JwtUser jwtuser=jwtService.extractUser(token);
+    	if(!jwtuser.getRole().equals(Role.ADMIN.name())) {
+    		return ResponseEntity
+    	            .status(HttpStatus.FORBIDDEN)
+    	            .body("Access denied. Only administrators can create a new admin.");
+
+    	}
+    	
+    	try {
+            RegisterResponse response = userService.createAdmin(user);
+
+            return ResponseEntity.ok(response);
+
+        } catch (RuntimeException e) {
+
+            return ResponseEntity
+                    .badRequest()
+                    .body(e.getMessage());
+        }
+    }
 
     // =========================
     // LOGIN
