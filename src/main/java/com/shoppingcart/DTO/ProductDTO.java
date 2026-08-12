@@ -1,5 +1,7 @@
 package com.shoppingcart.DTO;
 
+import java.math.BigDecimal;
+
 import lombok.Data;
 
 @Data
@@ -10,7 +12,7 @@ public class ProductDTO {
 
 	    private String description;
 
-	    private double price;
+	    private BigDecimal price;
 
 	    private int stockQuantity;
 
@@ -21,5 +23,7 @@ public class ProductDTO {
 	    private Long brandId;
 
 	    private String brandName;
+	    
+	    private String imageUrl;
 	    
 }

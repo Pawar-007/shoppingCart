@@ -24,7 +24,6 @@ public class UserServiceImpl implements UserService{
     JwtService jwtService;
 	@Override
 	public RegisterResponse register(User user) {
-		 System.out.println("EMAIL IN SERVICE = " + user.getEmail());
 		if (userRepository.existsByEmail(user.getEmail())) {
 	        throw new RuntimeException("Email already registered");
 	    }
