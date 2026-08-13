@@ -3,11 +3,12 @@ package com.shoppingcart.service;
 import java.util.List;
 
 import com.shoppingcart.DTO.ProductDTO;
+import com.shoppingcart.DTO.ProductRequestDTO;
 import com.shoppingcart.model.Product;
 
 public interface ProductService {
 
-    Product addProduct(Product product);
+    Product addProduct(ProductRequestDTO productRequest);
 
     Product updateProduct(Long productId,
                           Product product);

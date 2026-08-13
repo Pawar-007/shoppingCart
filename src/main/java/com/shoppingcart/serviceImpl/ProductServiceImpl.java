@@ -1,27 +1,85 @@
 package com.shoppingcart.serviceImpl;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.shoppingcart.DTO.ProductDTO;
+import com.shoppingcart.DTO.ProductRequestDTO;
+import com.shoppingcart.model.Brand;
+import com.shoppingcart.model.Category;
 import com.shoppingcart.model.Product;
+import com.shoppingcart.model.ProductImage;
+import com.shoppingcart.repository.BrandRepository;
+import com.shoppingcart.repository.CategoryRepository;
 import com.shoppingcart.repository.ProductRepository;
 import com.shoppingcart.service.ProductService;
 
+@Service
 public class ProductServiceImpl implements ProductService{
 
 	   @Autowired
 	    private ProductRepository productRepository;
+      
+	   @Autowired
+	   private CategoryRepository categoryRepository;
 
+	   @Autowired
+	   private BrandRepository brandRepository;
 
-	    @Override
-	    public Product addProduct(Product product) {
+	   @Override
+	   public Product addProduct(ProductRequestDTO request) {
+		   System.out.println("request"+request);
+		
+	       Category category = categoryRepository
+	               .findById(request.getCategoryId())
+	               .orElseThrow(() ->
+	                       new RuntimeException("Category not found")
+	               );
 
-	        return productRepository.save(product);
-	    }
+	       Brand brand = brandRepository
+	               .findById(request.getBrandId())
+	               .orElseThrow(() ->
+	                       new RuntimeException("Brand not found")
+	               );
+
+	       Product product = new Product();
+
+	       product.setProductName(request.getName());
+	       product.setDescription(request.getDescription());
+	       product.setPrice(request.getPrice());
+	       product.setStockQuantity(request.getStockQuantity());
+
+	       product.setCategory(category);
+	       product.setBrand(brand);
+	       
+	       List<ProductImage> images = new ArrayList<>();
+
+	       if (request.getImageUrls() != null) {
+
+	           for (int i = 0; i < request.getImageUrls().size(); i++) {
+
+	               ProductImage image = new ProductImage();
+
+	               image.setImageUrl(request.getImageUrls().get(i));
+
+	               // First image = primary image
+	               image.setIsPrimary(i == 0);
+
+	               image.setProduct(product);
+
+	               images.add(image);
+	           }
+	       }
+
+	       product.setProductImages(images);
+
+	       return productRepository.save(product);
+	   }
 
 
 	    @Override
@@ -36,8 +94,7 @@ public class ProductServiceImpl implements ProductService{
 	        existingProduct.setDescription(product.getDescription());
 	        existingProduct.setPrice(product.getPrice());
 	        existingProduct.setStockQuantity(product.getStockQuantity());
-	        existingProduct.setImageUrl(product.getImageUrl());
-
+	        
 	        existingProduct.setCategory(product.getCategory());
 	        existingProduct.setBrand(product.getBrand());
 
@@ -134,7 +191,7 @@ public class ProductServiceImpl implements ProductService{
 	        dto.setDescription(product.getDescription());
 	        dto.setPrice(product.getPrice());
 	        dto.setStockQuantity(product.getStockQuantity());
-	        dto.setImageUrl(product.getImageUrl());
+	        dto.setImageUrl(product.getProductImages());
 
 	        if (product.getCategory() != null) {
 

@@ -45,8 +45,5 @@ public class Product {
 
     private Integer stockQuantity;
 
-    @Column(length = 500)
-    private String imageUrl;
-
     private LocalDateTime createdAt;
 }

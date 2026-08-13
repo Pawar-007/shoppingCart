@@ -9,10 +9,13 @@ import org.springframework.web.bind.annotation.*;
 
 import com.shoppingcart.DTO.JwtUser;
 import com.shoppingcart.DTO.ProductDTO;
+import com.shoppingcart.DTO.ProductRequestDTO;
 import com.shoppingcart.enumerated.Role;
 import com.shoppingcart.model.Product;
+import com.shoppingcart.service.AuthService;
 import com.shoppingcart.service.JwtService;
 import com.shoppingcart.service.ProductService;
+import org.springframework.http.MediaType;
 
 @RestController
 @RequestMapping("/products")
@@ -22,39 +25,38 @@ public class ProductController {
     private ProductService productService;
     @Autowired
     private JwtService jwtService;
+    
+    @Autowired
+    private AuthService authService;
 
     // Add Product
-    @PostMapping
-    public ResponseEntity<?> addProduct(@RequestHeader(value = "Authorization", required = false) String token,@RequestBody Product product) {
-    	if(token == null || token.isBlank()) {
+    @PostMapping("/addProduct")
+    public ResponseEntity<?> addProduct(
+            @RequestHeader(value = "Authorization", required = false) String token,
+            @RequestBody ProductRequestDTO productRequest) {
+        System.out.println("request controller "+productRequest);
+        if (!authService.isAdmin(token)) {
             return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body("Authorization token is missing");
+                    .status(HttpStatus.FORBIDDEN)
+                    .body("Access denied. Only administrators are allowed.");
         }
-    	
-    	if (!token.startsWith("Bearer ")) {
-    	    return ResponseEntity
-    	            .status(HttpStatus.UNAUTHORIZED)
-    	            .body("Invalid Authorization header");
-    	}
 
-    	token = token.substring(7);
-    	
-    	JwtUser jwtuser=jwtService.extractUser(token);
-    	if (!Role.ADMIN.name().equals(jwtuser.getRole())) {
-    		return ResponseEntity
-    	            .status(HttpStatus.FORBIDDEN)
-    	            .body("Access denied. Only administrators can create a new admin.");
-
-    	}
-        return ResponseEntity.ok(productService.addProduct(product));
+        return ResponseEntity.ok(
+                productService.addProduct(productRequest)
+        );
     }
 
-    // Update Product
+    //update
     @PutMapping("/{productId}")
-    public ResponseEntity<Product> updateProduct(
+    public ResponseEntity<?> updateProduct(
+            @RequestHeader(value = "Authorization", required = false) String token,
             @PathVariable Long productId,
             @RequestBody Product product) {
+    	if (!authService.isAdmin(token)) {
+    	    return ResponseEntity
+    	            .status(HttpStatus.FORBIDDEN)
+    	            .body("Access denied. Only administrators are allowed.");
+    	}
 
         return ResponseEntity.ok(
                 productService.updateProduct(productId, product)
@@ -63,13 +65,22 @@ public class ProductController {
 
     // Delete Product
     @DeleteMapping("/{productId}")
-    public ResponseEntity<Void> deleteProduct(
+    public ResponseEntity<?> deleteProduct(
+            @RequestHeader(value = "Authorization", required = false) String token,
             @PathVariable Long productId) {
 
+    	if (!authService.isAdmin(token)) {
+    	    return ResponseEntity
+    	            .status(HttpStatus.FORBIDDEN)
+    	            .body("Access denied. Only administrators are allowed.");
+    	}
+
         productService.deleteProduct(productId);
+
         return ResponseEntity.noContent().build();
     }
-
+    
+    
     // Get Product by ID
     @GetMapping("/{productId}")
     public ResponseEntity<ProductDTO> getProduct(

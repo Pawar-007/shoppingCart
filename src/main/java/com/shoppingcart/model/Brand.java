@@ -3,6 +3,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "brand")
 @Getter
@@ -25,5 +27,6 @@ public class Brand {
 
     // Ek brand ke bahut saare products ho sakte hain
     @OneToMany(mappedBy = "brand", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Product> products;
 }

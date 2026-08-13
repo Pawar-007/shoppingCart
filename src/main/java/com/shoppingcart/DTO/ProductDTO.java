@@ -1,6 +1,10 @@
 package com.shoppingcart.DTO;
 
+
 import java.math.BigDecimal;
+import java.util.List;
+
+import com.shoppingcart.model.ProductImage;
 
 import lombok.Data;
 
@@ -24,6 +28,6 @@ public class ProductDTO {
 
 	    private String brandName;
 	    
-	    private String imageUrl;
+	    private List<ProductImage> imageUrl;
 	    
 }
