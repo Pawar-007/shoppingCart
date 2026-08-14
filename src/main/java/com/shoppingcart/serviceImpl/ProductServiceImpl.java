@@ -8,8 +8,11 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.shoppingcart.DTO.BrandResponseDTO;
+import com.shoppingcart.DTO.CategoryResponseDTO;
 import com.shoppingcart.DTO.ProductDTO;
 import com.shoppingcart.DTO.ProductRequestDTO;
+import com.shoppingcart.DTO.ProductResponseDTO;
 import com.shoppingcart.model.Brand;
 import com.shoppingcart.model.Category;
 import com.shoppingcart.model.Product;
@@ -83,20 +86,26 @@ public class ProductServiceImpl implements ProductService{
 
 
 	    @Override
-	    public Product updateProduct(Long productId, Product product) {
+	    public Product updateProduct(Long productId, ProductRequestDTO product) {
 
 	        Product existingProduct = productRepository.findById(productId)
 	                .orElseThrow(() ->
 	                    new RuntimeException("Product not found with id: " + productId)
 	                );
 
-	        existingProduct.setProductName(product.getProductName());
+	        existingProduct.setProductName(product.getName());
 	        existingProduct.setDescription(product.getDescription());
 	        existingProduct.setPrice(product.getPrice());
 	        existingProduct.setStockQuantity(product.getStockQuantity());
 	        
-	        existingProduct.setCategory(product.getCategory());
-	        existingProduct.setBrand(product.getBrand());
+	        Category category = categoryRepository.findById(product.getCategoryId())
+	                .orElseThrow(() -> new RuntimeException("Category not found"));
+
+	        Brand brand = brandRepository.findById(product.getBrandId())
+	                .orElseThrow(() -> new RuntimeException("Brand not found"));
+
+	        existingProduct.setCategory(category);
+	        existingProduct.setBrand(brand);
 
 	        return productRepository.save(existingProduct);
 	    }
@@ -114,7 +123,7 @@ public class ProductServiceImpl implements ProductService{
 
 
 	    @Override
-	    public ProductDTO getProduct(Long productId) {
+	    public ProductResponseDTO getProduct(Long productId) {
 
 	        Product product = productRepository.findById(productId)
 	                .orElseThrow(() ->
@@ -126,7 +135,7 @@ public class ProductServiceImpl implements ProductService{
 
 
 	    @Override
-	    public List<ProductDTO> getAllProducts() {
+	    public List<ProductResponseDTO> getAllProducts() {
 
 	        return productRepository.findAll()
 	                .stream()
@@ -136,7 +145,7 @@ public class ProductServiceImpl implements ProductService{
 
 
 	    @Override
-	    public List<ProductDTO> search(String keyword) {
+	    public List<ProductResponseDTO> search(String keyword) {
 
 	        return productRepository
 	                .findByProductNameContainingIgnoreCase(keyword)
@@ -147,7 +156,7 @@ public class ProductServiceImpl implements ProductService{
 
 
 	    @Override
-	    public List<ProductDTO> getProductsByCategory(Long categoryId) {
+	    public List<ProductResponseDTO> getProductsByCategory(Long categoryId) {
 
 	        return productRepository
 	                .findByCategory_CategoryId(categoryId)
@@ -158,7 +167,7 @@ public class ProductServiceImpl implements ProductService{
 
 
 	    @Override
-	    public List<ProductDTO> getProductsByBrand(Long brandId) {
+	    public List<ProductResponseDTO> getProductsByBrand(Long brandId) {
 
 	        return productRepository
 	                .findByBrand_BrandId(brandId)
@@ -169,7 +178,7 @@ public class ProductServiceImpl implements ProductService{
 
 
 	    @Override
-	    public List<ProductDTO> getProductsByPrice(double min, double max) {
+	    public List<ProductResponseDTO> getProductsByPrice(double min, double max) {
 
 	        BigDecimal minimum = BigDecimal.valueOf(min);
 	        BigDecimal maximum = BigDecimal.valueOf(max);
@@ -182,40 +191,60 @@ public class ProductServiceImpl implements ProductService{
 	    }
 
 
-	    private ProductDTO convertToDTO(Product product) {
+	    private ProductResponseDTO convertToDTO(Product product) {
 
-	        ProductDTO dto = new ProductDTO();
-
-	        dto.setProductId(product.getProductId());
-	        dto.setName(product.getProductName());
-	        dto.setDescription(product.getDescription());
-	        dto.setPrice(product.getPrice());
-	        dto.setStockQuantity(product.getStockQuantity());
-	        dto.setImageUrl(product.getProductImages());
-
-	        if (product.getCategory() != null) {
-
-	            dto.setCategoryId(
-	                product.getCategory().getCategoryId()
-	            );
-
-	            dto.setCategoryName(
-	                product.getCategory().getCategoryName()
-	            );
-	        }
-
-	        if (product.getBrand() != null) {
-
-	            dto.setBrandId(
-	                product.getBrand().getBrandId()
-	            );
-
-	            dto.setBrandName(
-	                product.getBrand().getBrandName()
-	            );
-	        }
-
-	        return dto;
-	    }
-
+		    ProductResponseDTO dto = new ProductResponseDTO();
+		
+		    dto.setProductId(product.getProductId());
+		    dto.setName(product.getProductName());
+		    dto.setDescription(product.getDescription());
+		    dto.setPrice(product.getPrice());
+		    dto.setStockQuantity(product.getStockQuantity());
+		    dto.setCreatedAt(product.getCreatedAt());
+		
+		    // Category
+		    if (product.getCategory() != null) {
+		
+		        CategoryResponseDTO categoryDTO = new CategoryResponseDTO();
+		
+		        categoryDTO.setCategoryId(
+		                product.getCategory().getCategoryId()
+		        );
+		
+		        categoryDTO.setCategoryName(
+		                product.getCategory().getCategoryName()
+		        );
+		
+		        dto.setCategory(categoryDTO);
+		    }
+		
+		    // Brand
+		    if (product.getBrand() != null) {
+		
+		        BrandResponseDTO brandDTO = new BrandResponseDTO();
+		
+		        brandDTO.setBrandId(
+		                product.getBrand().getBrandId()
+		        );
+		
+		        brandDTO.setBrandName(
+		                product.getBrand().getBrandName()
+		        );
+		
+		        dto.setBrand(brandDTO);
+		    }
+		
+		    // Images
+		    if (product.getProductImages() != null) {
+		
+		        List<String> imageUrls = product.getProductImages()
+		                .stream()
+		                .map(ProductImage::getImageUrl)
+		                .collect(Collectors.toList());
+		
+		        dto.setImageUrl(imageUrls);
+		    }
+		
+		    return dto;
+		}
 }

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import com.shoppingcart.DTO.JwtUser;
 import com.shoppingcart.DTO.ProductDTO;
 import com.shoppingcart.DTO.ProductRequestDTO;
+import com.shoppingcart.DTO.ProductResponseDTO;
 import com.shoppingcart.enumerated.Role;
 import com.shoppingcart.model.Product;
 import com.shoppingcart.service.AuthService;
@@ -34,7 +35,7 @@ public class ProductController {
     public ResponseEntity<?> addProduct(
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestBody ProductRequestDTO productRequest) {
-        System.out.println("request controller "+productRequest);
+        
         if (!authService.isAdmin(token)) {
             return ResponseEntity
                     .status(HttpStatus.FORBIDDEN)
@@ -51,7 +52,8 @@ public class ProductController {
     public ResponseEntity<?> updateProduct(
             @RequestHeader(value = "Authorization", required = false) String token,
             @PathVariable Long productId,
-            @RequestBody Product product) {
+            @RequestBody ProductRequestDTO product) {
+    	
     	if (!authService.isAdmin(token)) {
     	    return ResponseEntity
     	            .status(HttpStatus.FORBIDDEN)
@@ -83,7 +85,7 @@ public class ProductController {
     
     // Get Product by ID
     @GetMapping("/{productId}")
-    public ResponseEntity<ProductDTO> getProduct(
+    public ResponseEntity<ProductResponseDTO> getProduct(
             @PathVariable Long productId) {
 
         return ResponseEntity.ok(
@@ -93,7 +95,7 @@ public class ProductController {
 
     // Get All Products
     @GetMapping
-    public ResponseEntity<List<ProductDTO>> getAllProducts() {
+    public ResponseEntity<List<ProductResponseDTO>> getAllProducts() {
 
         return ResponseEntity.ok(
                 productService.getAllProducts()
@@ -102,7 +104,7 @@ public class ProductController {
 
     // Search Products
     @GetMapping("/search")
-    public ResponseEntity<List<ProductDTO>> search(
+    public ResponseEntity<List<ProductResponseDTO>> search(
             @RequestParam String keyword) {
 
         return ResponseEntity.ok(
@@ -112,7 +114,7 @@ public class ProductController {
 
     // Products by Category
     @GetMapping("/category/{categoryId}")
-    public ResponseEntity<List<ProductDTO>> getProductsByCategory(
+    public ResponseEntity<List<ProductResponseDTO>> getProductsByCategory(
             @PathVariable Long categoryId) {
 
         return ResponseEntity.ok(
@@ -122,7 +124,7 @@ public class ProductController {
 
     // Products by Brand
     @GetMapping("/brand/{brandId}")
-    public ResponseEntity<List<ProductDTO>> getProductsByBrand(
+    public ResponseEntity<List<ProductResponseDTO>> getProductsByBrand(
             @PathVariable Long brandId) {
 
         return ResponseEntity.ok(
@@ -132,7 +134,7 @@ public class ProductController {
 
     // Products by Price Range
     @GetMapping("/price")
-    public ResponseEntity<List<ProductDTO>> getProductsByPrice(
+    public ResponseEntity<List<ProductResponseDTO>> getProductsByPrice(
             @RequestParam double min,
             @RequestParam double max) {
 

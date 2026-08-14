@@ -1,12 +1,16 @@
 package com.shoppingcart.DTO;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+
+import com.shoppingcart.enumerated.OrderStatus;
+
 import lombok.Data;
 
 @Data
 public class OrderDTO {
     private Long orderId;
     private LocalDateTime orderDate;
-    private double totalAmount;
-    private String status;
+    private BigDecimal totalAmount;
+    private OrderStatus status;
 }

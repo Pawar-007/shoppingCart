@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.shoppingcart.DTO.ProductDTO;
 import com.shoppingcart.DTO.ProductRequestDTO;
+import com.shoppingcart.DTO.ProductResponseDTO;
 import com.shoppingcart.model.Product;
 
 public interface ProductService {
@@ -11,21 +12,21 @@ public interface ProductService {
     Product addProduct(ProductRequestDTO productRequest);
 
     Product updateProduct(Long productId,
-                          Product product);
+    		ProductRequestDTO product);
 
     void deleteProduct(Long productId);
 
-    ProductDTO getProduct(Long productId);
+    ProductResponseDTO getProduct(Long productId);
 
-    List<ProductDTO> getAllProducts();
+    List<ProductResponseDTO> getAllProducts();
 
-    List<ProductDTO> search(String keyword);
+    List<ProductResponseDTO> search(String keyword);
 
-    List<ProductDTO> getProductsByCategory(Long categoryId);
+    List<ProductResponseDTO> getProductsByCategory(Long categoryId);
 
-    List<ProductDTO> getProductsByBrand(Long brandId);
+    List<ProductResponseDTO> getProductsByBrand(Long brandId);
 
-    List<ProductDTO> getProductsByPrice(double min,
+    List<ProductResponseDTO> getProductsByPrice(double min,
                                         double max);
 
 }
