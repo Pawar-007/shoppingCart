@@ -8,7 +8,7 @@ public interface CartService {
 
     void addToCart(Long userId,AddToCartRequest request);
 
-    void removeFromCart(Long productId);
+    String removeFromCart(Long userId,Long productId);
 
     CartResponse getCart(Long userId);
 

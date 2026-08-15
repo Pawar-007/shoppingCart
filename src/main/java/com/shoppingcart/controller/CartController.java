@@ -58,12 +58,27 @@ public class CartController {
     	}
     }
 
-    @DeleteMapping("/remove/{userId}/{productId}")
-    public String removeFromCart(
-            @PathVariable Long userId,
+    @DeleteMapping("/remove/{productId}")
+    public ResponseEntity<?> removeFromCart(
+    		@RequestHeader(value = "Authorization") String token,
             @PathVariable Long productId) {
+    	
+    	if(token == null || token.isBlank()) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body("Authorization token is missing");
+        }
+    	
+    	token = token.replace("Bearer ", "");
+    	
+    	JwtUser jwtuser=jwtService.extractUser(token);
 
-        return "Product Removed";
+    	String message = cartService.removeFromCart(
+                jwtuser.getUserId(),
+                productId
+        );
+
+        return ResponseEntity.ok(message);
     }
 
     @GetMapping("/{userId}")

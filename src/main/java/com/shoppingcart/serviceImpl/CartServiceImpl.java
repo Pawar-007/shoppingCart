@@ -1,11 +1,13 @@
 package com.shoppingcart.serviceImpl;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.shoppingcart.DTO.AddToCartRequest;
+import com.shoppingcart.DTO.CartItemDTO;
 import com.shoppingcart.DTO.CartResponse;
 import com.shoppingcart.model.Cart;
 import com.shoppingcart.model.CartItem;
@@ -84,27 +86,93 @@ public class CartServiceImpl implements CartService{
               cartItemRepository.save(cartItem);
           }
       }
-	@Override
-	public void removeFromCart(Long productId) {
-		
-	}
+      
+      @Override
+      public String removeFromCart(Long userId, Long productId) {
+
+          CartItem cartItem = cartItemRepository
+                  .findByCart_User_UserIdAndProduct_ProductId(userId, productId)
+                  .orElseThrow(() -> new RuntimeException("Product not found in cart"));
+
+          cartItemRepository.delete(cartItem);
+          return "Product removed from cart successfully";
+      }
+      
+      @Override
+      public CartResponse getCart(Long userId) {
+
+          // 1. User ka cart find karo
+          Cart cart = cartRepository
+                  .findByUser_UserId(userId)
+                  .orElseThrow(() -> new RuntimeException("Cart not found"));
+
+          // 2. CartResponse create karo
+          CartResponse response = new CartResponse();
+
+          response.setCartId(cart.getCartId());
+
+          // 3. CartItems ko DTO mein convert karo
+          List<CartItemDTO> itemDTOs = cart.getCartItems()
+                  .stream()
+                  .map(cartItem -> {
+
+                      CartItemDTO dto = new CartItemDTO();
+
+                      Product product = cartItem.getProduct();
+
+                      dto.setProductId(product.getProductId());
+                      dto.setProductName(product.getProductName());
+                      dto.setPrice(product.getPrice().doubleValue());
+                      dto.setQuantity(cartItem.getQuantity());
+
+                      double total = product.getPrice().doubleValue()
+                              * cartItem.getQuantity();
+
+                      dto.setTotal(total);
+
+                      return dto;
+                  })
+                  .toList();
+
+          response.setItems(itemDTOs);
+
+          // 4. Grand total calculate karo
+          double grandTotal = itemDTOs.stream()
+                  .mapToDouble(CartItemDTO::getTotal)
+                  .sum();
+
+          response.setGrandTotal(grandTotal);
+
+          return response;
+      }
 	
-	@Override
-	public CartResponse getCart(Long userId) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
-	@Override
-	public void clearCart(Long userId) {
-		// TODO Auto-generated method stub
-		
-	}
+      @Override
+      public void clearCart(Long userId) {
+
+          // 1. User ka cart find karo
+          Cart cart = cartRepository
+                  .findByUser_UserId(userId)
+                  .orElseThrow(() -> new RuntimeException("Cart not found"));
+
+          // 2. Cart ke saare items delete karo
+          cartItemRepository.deleteAll(
+                  cart.getCartItems()
+          );
+      }
 	
 	@Override
 	public void updateQuantity(Long userId, Long productId, int quantity) {
-		// TODO Auto-generated method stub
-		
-	}
 
+	    if (quantity <= 0) {
+	        throw new RuntimeException("Quantity must be greater than 0");
+	    }
+
+	    CartItem cartItem = cartItemRepository
+	            .findByCart_User_UserIdAndProduct_ProductId(userId, productId)
+	            .orElseThrow(() -> new RuntimeException("Product not found in cart"));
+
+	    cartItem.setQuantity(quantity);
+
+	    cartItemRepository.save(cartItem);
+	}
 }
