@@ -1,9 +1,12 @@
 package com.shoppingcart.service;
 
+import org.springframework.stereotype.Service;
+
 import com.shoppingcart.DTO.AddToCartRequest;
 import com.shoppingcart.DTO.CartResponse;
 import com.shoppingcart.model.User;
 
+@Service
 public interface CartService {
 
     void addToCart(Long userId,AddToCartRequest request);

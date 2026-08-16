@@ -6,12 +6,18 @@ import com.shoppingcart.DTO.OrderDTO;
 
 public interface OrderService {
 
-    void placeOrder(Long userId);
+	 // Cart se new order create karna
+    OrderDTO placeOrder(Long userId, Long addressId);
 
-    List<OrderDTO> getOrders(Long userId);
+    // Particular order dekhna
+    OrderDTO getOrderById(Long userId, Long orderId);
 
-    OrderDTO getOrder(Long orderId);
+    // User ke saare orders
+    List<OrderDTO> getUserOrders(Long userId);
 
-    void cancelOrder(Long orderId);
+    // User ke active/current orders
+    List<OrderDTO> getActiveOrders(Long userId);
 
+    // Order cancel karna
+    void cancelOrder(Long userId, Long orderId);
 }
