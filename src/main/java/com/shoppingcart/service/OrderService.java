@@ -7,7 +7,11 @@ import com.shoppingcart.DTO.OrderDTO;
 public interface OrderService {
 
 	 // Cart se new order create karna
-    OrderDTO placeOrder(Long userId, Long addressId);
+	OrderDTO placeOrder(
+	        Long userId,
+	        Long addressId,
+	        List<Long> selectedCartItemIds
+	);
 
     // Particular order dekhna
     OrderDTO getOrderById(Long userId, Long orderId);

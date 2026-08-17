@@ -119,7 +119,7 @@ public class CartServiceImpl implements CartService{
                       CartItemDTO dto = new CartItemDTO();
 
                       Product product = cartItem.getProduct();
-
+                      dto.setCartItemId(cartItem.getCartItemId());
                       dto.setProductId(product.getProductId());
                       dto.setProductName(product.getProductName());
                       dto.setPrice(product.getPrice().doubleValue());

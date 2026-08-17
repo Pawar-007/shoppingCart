@@ -48,5 +48,5 @@ public class Address {
     @Enumerated(EnumType.STRING)
     private AddressType addressType;
 
-    private Boolean isDefault;
+    private Boolean isDefault=false;
 }
