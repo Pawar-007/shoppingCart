@@ -1,14 +1,29 @@
 package com.shoppingcart.serviceImpl;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.shoppingcart.DTO.CartItemDTO;
 import com.shoppingcart.DTO.CartResponse;
 import com.shoppingcart.DTO.OrderDTO;
+import com.shoppingcart.enumerated.OrderStatus;
 import com.shoppingcart.model.Address;
 import com.shoppingcart.model.Cart;
+import com.shoppingcart.model.CartItem;
+import com.shoppingcart.model.Order;
+import com.shoppingcart.model.OrderItem;
+import com.shoppingcart.model.Product;
 import com.shoppingcart.model.User;
+import com.shoppingcart.repository.CartItemRepository;
+import com.shoppingcart.repository.OrderRepository;
+import com.shoppingcart.repository.ProductRepository;
 import com.shoppingcart.service.AddressService;
 import com.shoppingcart.service.CartService;
 import com.shoppingcart.service.OrderService;
@@ -25,9 +40,24 @@ public class OderServiceImpl implements OrderService{
 	@Autowired
 	private AddressService addressService;
 	
+	@Autowired
+	private ProductRepository productRepository;
+	
+	@Autowired
+	private OrderRepository orderRepository;
+	
+	@Autowired
+	private CartItemRepository cartItemRepository;
+	
 
 	@Override
+	@Transactional
 	public OrderDTO placeOrder(Long userId, Long addressId, List<Long> selectedCartItemIds) {
+		
+		if (selectedCartItemIds == null || selectedCartItemIds.isEmpty()) {
+		    throw new RuntimeException("Please select at least one cart item");
+		}
+		
 		
 		// 1. User find
         User user=userServive.getProfile(userId);
@@ -38,27 +68,128 @@ public class OderServiceImpl implements OrderService{
 	    // 3. Address find
         Address address=addressService.getAddressById(userId, addressId);
         
-	    // 4. Selected CartItems validate
-        
+     // 4. Selected CartItems validate
+        List<CartItemDTO> selectedItems = cart.getItems()
+                .stream()
+                .filter(item ->
+                        selectedCartItemIds.contains(item.getCartItemId()))
+                .toList();
 
-	    // 5. Stock check
+        if (selectedItems.size() != selectedCartItemIds.size()) {
+            throw new RuntimeException(
+                    "One or more selected cart items are invalid");
+        }
 
-	    // 6. Order create
 
-	    // 7. OrderItems create
+        // 5. Stock check
+        Map<Long, Product> products = new HashMap<>();
 
-	    // 8. Total calculate
+        for (CartItemDTO item : selectedItems) {
 
-	    // 9. Order save
+            Product product = productRepository.findById(item.getProductId())
+                    .orElseThrow(() ->
+                            new RuntimeException(
+                                    "Product not found with id: "
+                                            + item.getProductId()));
 
-	    // 10. Stock reduce
+            if (product.getStockQuantity() < item.getQuantity()) {
+                throw new RuntimeException(
+                        "Insufficient stock for product: "
+                                + product.getProductName());
+            }
 
-	    // 11. Selected CartItems remove
+            products.put(item.getProductId(), product);
+        }
 
-	    // 12. OrderDTO return
-		return null;
+
+        // 6. Order create
+        Order order = new Order();
+
+        order.setUser(user);
+        order.setAddress(address);
+        order.setOrderDate(LocalDateTime.now());
+        order.setOrderStatus(OrderStatus.PENDING);
+
+
+        // 7. OrderItems create
+        List<OrderItem> orderItems = new ArrayList<>();
+
+
+        // 8. Total calculate
+        BigDecimal totalAmount = BigDecimal.ZERO;
+
+        for (CartItemDTO item : selectedItems) {
+
+            Product product = products.get(item.getProductId());
+
+            OrderItem orderItem = new OrderItem();
+
+            orderItem.setOrder(order);
+            orderItem.setProduct(product);
+            orderItem.setQuantity(item.getQuantity());
+            orderItem.setPrice(product.getPrice());
+
+            BigDecimal itemTotal = product.getPrice()
+                    .multiply(BigDecimal.valueOf(item.getQuantity()));
+
+            totalAmount = totalAmount.add(itemTotal);
+
+            orderItems.add(orderItem);
+        }
+
+        order.setOrderItems(orderItems);
+        order.setTotalAmount(totalAmount);
+
+     // 9. Order save
+        Order savedOrder = orderRepository.save(order);
+
+
+        // 10. Stock reduce
+        for (CartItemDTO item : selectedItems) {
+
+            Product product = products.get(item.getProductId());
+
+            product.setStockQuantity(
+                    product.getStockQuantity() - item.getQuantity()
+            );
+
+            productRepository.save(product);
+        }
+
+
+        // 11. Selected CartItems remove
+        for (Long cartItemId : selectedCartItemIds) {
+
+            CartItem cartItem = cartItemRepository.findById(cartItemId)
+                    .orElseThrow(() ->
+                            new RuntimeException(
+                                    "Cart item not found with id: " + cartItemId));
+
+            if (!cartItem.getCart().getUser().getUserId().equals(userId)) {
+                throw new RuntimeException(
+                        "You are not authorized to remove this cart item");
+            }
+
+            cartItemRepository.delete(cartItem);
+        }
+
+
+        // 12. OrderDTO return
+        return mapToOrderDTO(savedOrder);
 	}
 
+	private OrderDTO mapToOrderDTO(Order order) {
+
+	    OrderDTO dto = new OrderDTO();
+
+	    dto.setOrderId(order.getOrderId());
+	    dto.setTotalAmount(order.getTotalAmount());
+	    dto.setStatus(order.getOrderStatus());
+	    dto.setOrderDate(order.getOrderDate());
+
+	    return dto;
+	}
+	
 	@Override
 	public OrderDTO getOrderById(Long userId, Long orderId) {
 		// TODO Auto-generated method stub
