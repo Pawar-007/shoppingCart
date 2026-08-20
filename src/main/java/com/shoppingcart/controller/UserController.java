@@ -21,150 +21,209 @@ public class UserController {
 
     @Autowired
     private UserService userService;
-    
+
     @Autowired
     private JwtService jwtService;
 
 
-    // =========================
-    // REGISTER
-    // =========================
-
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody User user) {
-    	  System.out.println("EMAIL FROM REQUEST = " + user.getEmail());
 
+        try {
 
-    	try {
             RegisterResponse response = userService.register(user);
 
-            return ResponseEntity.ok(response);
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(response);
 
         } catch (RuntimeException e) {
 
             return ResponseEntity
-                    .badRequest()
+                    .status(HttpStatus.BAD_REQUEST)
                     .body(e.getMessage());
         }
     }
 
     @PostMapping("/createAdmin")
-    public ResponseEntity<?> createAdmin(@RequestHeader(value = "Authorization", required = false) String token,@RequestBody User user){
-        
-    	if(token == null || token.isBlank()) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body("Authorization token is missing");
-        }
-    	
-    	token = token.replace("Bearer ", "");
-    	
-    	JwtUser jwtuser=jwtService.extractUser(token);
-    	if(!jwtuser.getRole().equals(Role.ADMIN.name())) {
-    		return ResponseEntity
-    	            .status(HttpStatus.FORBIDDEN)
-    	            .body("Access denied. Only administrators can create a new admin.");
+    public ResponseEntity<?> createAdmin(
+            @RequestHeader(value = "Authorization", required = false) String token,
+            @RequestBody User user) {
 
-    	}
-    	
-    	try {
-            RegisterResponse response = userService.createAdmin(user);
+        try {
+
+            if (token == null || token.isBlank()) {
+                return ResponseEntity
+                        .status(HttpStatus.UNAUTHORIZED)
+                        .body("Authorization token is missing");
+            }
+
+            if (token.startsWith("Bearer ")) {
+                token = token.substring(7);
+            }
+
+            JwtUser jwtUser = jwtService.extractUser(token);
+
+            if (jwtUser == null) {
+                return ResponseEntity
+                        .status(HttpStatus.UNAUTHORIZED)
+                        .body("Invalid authorization token");
+            }
+
+            if (!Role.ADMIN.name().equals(jwtUser.getRole())) {
+                return ResponseEntity
+                        .status(HttpStatus.FORBIDDEN)
+                        .body("Access denied. Only administrators can create a new admin.");
+            }
+
+            RegisterResponse response =
+                    userService.createAdmin(user);
+
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(response);
+
+        } catch (RuntimeException e) {
+
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(
+            @RequestBody LoginRequest request) {
+
+        try {
+
+            LoginResponse response =
+                    userService.login(request);
 
             return ResponseEntity.ok(response);
 
         } catch (RuntimeException e) {
 
             return ResponseEntity
-                    .badRequest()
+                    .status(HttpStatus.BAD_REQUEST)
                     .body(e.getMessage());
         }
     }
 
-    // =========================
-    // LOGIN
-    // =========================
+    @GetMapping("/profile")
+    public ResponseEntity<?> getProfile(
+            @RequestHeader(value = "Authorization", required = false) String token) {
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(
-            @RequestBody LoginRequest request) {
+        try {
 
-        try{
-        	LoginResponse response = userService.login(request);
+            Long userId = getUserIdFromToken(token);
 
-            return ResponseEntity.ok(response);
-        }catch (Exception ex) {
-                return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ex.getMessage());
+            User user = userService.getProfile(userId);
 
-		}
+            return ResponseEntity.ok(user);
+
+        } catch (RuntimeException e) {
+
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(e.getMessage());
+        }
     }
 
 
-    // =========================
-    // GET PROFILE
-    // =========================
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<User> getProfile(
-            @PathVariable Long userId) {
-
-        User user = userService.getProfile(userId);
-
-        return ResponseEntity.ok(user);
-    }
-
-
-    // =========================
-    // UPDATE PROFILE
-    // =========================
-
-    @PutMapping("/{userId}")
-    public ResponseEntity<User> updateProfile(
-            @PathVariable Long userId,
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateProfile(
+            @RequestHeader(value = "Authorization", required = false) String token,
             @RequestBody User user) {
 
-        User updatedUser =
-                userService.updateProfile(userId, user);
+        try {
 
-        return ResponseEntity.ok(updatedUser);
+            Long userId = getUserIdFromToken(token);
+
+            User updatedUser =
+                    userService.updateProfile(userId, user);
+
+            return ResponseEntity.ok(updatedUser);
+
+        } catch (RuntimeException e) {
+
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(e.getMessage());
+        }
     }
 
-    
-    // =========================
-    // CHANGE PASSWORD
-    // =========================
-
-    @PutMapping("/{userId}/password")
-    public ResponseEntity<String> changePassword(
-            @PathVariable Long userId,
+    @PutMapping("/profile/password")
+    public ResponseEntity<?> changePassword(
+            @RequestHeader(value = "Authorization", required = false) String token,
             @RequestParam String oldPassword,
             @RequestParam String newPassword) {
 
-        userService.changePassword(
-                userId,
-                oldPassword,
-                newPassword
-        );
+        try {
 
-        return ResponseEntity.ok(
-                "Password changed successfully"
-        );
+            Long userId = getUserIdFromToken(token);
+
+            userService.changePassword(
+                    userId,
+                    oldPassword,
+                    newPassword
+            );
+
+            return ResponseEntity.ok(
+                    "Password changed successfully"
+            );
+
+        } catch (RuntimeException e) {
+
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(e.getMessage());
+        }
     }
 
+    @DeleteMapping("/profile")
+    public ResponseEntity<?> deleteUser(
+            @RequestHeader(value = "Authorization", required = false) String token) {
 
-    // =========================
-    // DELETE USER
-    // =========================
+        try {
 
-    @DeleteMapping("/{userId}")
-    public ResponseEntity<String> deleteUser(
-            @PathVariable Long userId) {
+            Long userId = getUserIdFromToken(token);
 
-        userService.deleteUser(userId);
+            userService.deleteUser(userId);
 
-        return ResponseEntity.ok(
-                "User deleted successfully"
-        );
+            return ResponseEntity.ok(
+                    "User deleted successfully"
+            );
+
+        } catch (RuntimeException e) {
+
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(e.getMessage());
+        }
+    }
+
+    private Long getUserIdFromToken(String token) {
+
+        if (token == null || token.isBlank()) {
+            throw new RuntimeException(
+                    "Authorization token is missing"
+            );
+        }
+
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+
+        JwtUser jwtUser = jwtService.extractUser(token);
+
+        if (jwtUser == null) {
+            throw new RuntimeException(
+                    "Invalid authorization token"
+            );
+        }
+
+        return jwtUser.getUserId();
     }
 }

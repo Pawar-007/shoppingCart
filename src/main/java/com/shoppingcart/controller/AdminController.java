@@ -19,7 +19,7 @@ import com.shoppingcart.service.AdminService;
 import com.shoppingcart.service.AuthService;
 
 @RestController
-@RequestMapping("	")
+@RequestMapping("/admin")
 public class AdminController {
 
     @Autowired

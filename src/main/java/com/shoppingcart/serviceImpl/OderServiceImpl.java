@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.shoppingcart.DTO.CartItemDTO;
@@ -22,6 +23,7 @@ import com.shoppingcart.model.OrderItem;
 import com.shoppingcart.model.Product;
 import com.shoppingcart.model.User;
 import com.shoppingcart.repository.CartItemRepository;
+import com.shoppingcart.repository.OrderItemRepository;
 import com.shoppingcart.repository.OrderRepository;
 import com.shoppingcart.repository.ProductRepository;
 import com.shoppingcart.service.AddressService;
@@ -29,6 +31,7 @@ import com.shoppingcart.service.CartService;
 import com.shoppingcart.service.OrderService;
 import com.shoppingcart.service.UserService;
 
+@Service
 public class OderServiceImpl implements OrderService{
 	
 	@Autowired
@@ -49,6 +52,8 @@ public class OderServiceImpl implements OrderService{
 	@Autowired
 	private CartItemRepository cartItemRepository;
 	
+	@Autowired
+	private OrderItemRepository orderItemRepository;
 
 	@Override
 	@Transactional
@@ -192,26 +197,88 @@ public class OderServiceImpl implements OrderService{
 	
 	@Override
 	public OrderDTO getOrderById(Long userId, Long orderId) {
-		// TODO Auto-generated method stub
-		return null;
+
+	    Order order = orderRepository
+	            .findByOrderIdAndUser_UserId(orderId, userId)
+	            .orElseThrow(() ->
+	                    new RuntimeException(
+	                            "Order not found or you are not authorized to access this order"
+	                    ));
+
+	    return mapToOrderDTO(order);
 	}
 
 	@Override
 	public List<OrderDTO> getUserOrders(Long userId) {
-		// TODO Auto-generated method stub
-		return null;
+
+	    List<Order> orders =
+	            orderRepository.findByUser_UserIdOrderByOrderDateDesc(userId);
+
+	    return orders.stream()
+	            .map(this::mapToOrderDTO)
+	            .toList();
 	}
 
 	@Override
 	public List<OrderDTO> getActiveOrders(Long userId) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
+		List<OrderStatus> activeStatuses = List.of(
+	            OrderStatus.PENDING,
+	            OrderStatus.PROCESSING,
+	            OrderStatus.SHIPPED
+	    );
+
+	    List<Order> orders =
+	            orderRepository.findByUser_UserIdAndOrderStatusIn(
+	                    userId,
+	                    activeStatuses
+	            );
+
+	    return orders.stream()
+	            .map(this::mapToOrderDTO)
+	            .toList();
+	}
+	
+	
 	@Override
+	@Transactional
 	public void cancelOrder(Long userId, Long orderId) {
-		// TODO Auto-generated method stub
-		
+
+	    // 1. Order find + ownership check
+	    Order order = orderRepository
+	            .findByOrderIdAndUser_UserId(orderId, userId)
+	            .orElseThrow(() ->
+	                    new RuntimeException(
+	                            "Order not found or you are not authorized to cancel this order"
+	                    ));
+
+	    // 2. Check cancellation status
+	    if (order.getOrderStatus() != OrderStatus.PENDING) {
+	        throw new RuntimeException(
+	            "Order cannot be cancelled at this stage"
+	        );
+	    }
+
+	    // 3. Restore stock
+	    List<OrderItem> orderItems =
+	            orderItemRepository.findByOrder_OrderId(orderId);
+
+	    for (OrderItem orderItem : orderItems) {
+
+	        Product product = orderItem.getProduct();
+
+	        product.setStockQuantity(
+	                product.getStockQuantity()
+	                        + orderItem.getQuantity()
+	        );
+
+	        productRepository.save(product);
+	    }
+
+	    // 4. Change order status
+	    order.setOrderStatus(OrderStatus.CANCELLED);
+
+	    orderRepository.save(order);
 	}
 
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.shoppingcart.DTO.AddToCartRequest;
 import com.shoppingcart.DTO.CartItemDTO;
@@ -19,6 +20,7 @@ import com.shoppingcart.repository.ProductRepository;
 import com.shoppingcart.repository.UserRepository;
 import com.shoppingcart.service.CartService;
 
+@Service
 public class CartServiceImpl implements CartService{
 	
 	  @Autowired
