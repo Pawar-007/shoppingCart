@@ -16,7 +16,6 @@ import com.shoppingcart.service.UserService;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin("*")
 public class UserController {
 
     @Autowired
@@ -94,7 +93,7 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<?> login(
             @RequestBody LoginRequest request) {
-
+        System.out.println(request.getEmail()+" "+request.getPassword());
         try {
 
             LoginResponse response =

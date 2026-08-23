@@ -15,4 +15,6 @@ public interface AddressService {
     Address updateAddress(Long userId, Long addressId, Address address);
 
     void deleteAddress(Long userId, Long addressId);
+    
+    Address setDefaultAddress(Long userId, Long addressId);
 }

@@ -118,4 +118,34 @@ public class AddressServiceImpl implements AddressService {
 
         addressRepository.delete(address);
     }
+    
+    @Override
+    public Address setDefaultAddress(Long userId, Long addressId) {
+
+        Address address = addressRepository.findById(addressId)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Address not found with id: " + addressId));
+
+        // Ownership check
+        if (!address.getUser().getUserId().equals(userId)) {
+            throw new RuntimeException(
+                    "You are not authorized to modify this address");
+        }
+
+        // Pehle user's saare addresses default false
+        List<Address> addresses =
+                addressRepository.findByUser_UserId(userId);
+
+        for (Address a : addresses) {
+            a.setIsDefault(false);
+        }
+
+        // Selected address default
+        address.setIsDefault(true);
+
+        addressRepository.saveAll(addresses);
+
+        return addressRepository.save(address);
+    }
 }

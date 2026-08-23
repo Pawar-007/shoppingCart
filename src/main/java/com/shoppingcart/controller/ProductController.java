@@ -41,7 +41,7 @@ public class ProductController {
                     .status(HttpStatus.FORBIDDEN)
                     .body("Access denied. Only administrators are allowed.");
         }
-
+        System.out.println("productrequest "+productRequest);
         return ResponseEntity.ok(
                 productService.addProduct(productRequest)
         );

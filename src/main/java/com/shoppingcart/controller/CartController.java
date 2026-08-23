@@ -8,9 +8,11 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.shoppingcart.DTO.AddToCartRequest;
@@ -21,7 +23,6 @@ import com.shoppingcart.service.JwtService;
 
 @RestController
 @RequestMapping("/api/cart")
-@CrossOrigin("*")
 public class CartController {
 
     @Autowired
@@ -29,7 +30,26 @@ public class CartController {
     
     @Autowired
     private JwtService jwtService;
+    
+    @GetMapping
+    public ResponseEntity<?> getCart(
+            @RequestHeader(value = "Authorization") String token) {
 
+        if (token == null || token.isBlank()) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body("Authorization token is missing");
+        }
+
+        token = token.replace("Bearer ", "");
+
+        JwtUser jwtUser = jwtService.extractUser(token);
+
+        CartResponse cartResponse =
+                cartService.getCart(jwtUser.getUserId());
+
+        return ResponseEntity.ok(cartResponse);
+    }
     @PostMapping("/add")
     public ResponseEntity<?> addToCart(
     		@RequestHeader(value = "Authorization") String token,
@@ -95,5 +115,41 @@ public class CartController {
         cartService.clearCart(userId);
 
         return "Cart Cleared";
+    }
+    
+    @PutMapping("/update/{productId}")
+    public ResponseEntity<?> updateQuantity(
+            @RequestHeader(value = "Authorization") String token,
+            @PathVariable Long productId,
+            @RequestParam int quantity) {
+
+        if (token == null || token.isBlank()) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body("Authorization token is missing");
+        }
+        System.out.println("update Preoduct "+productId+" "+quantity);
+        token = token.replace("Bearer ", "");
+
+        JwtUser jwtUser = jwtService.extractUser(token);
+
+        try {
+
+            cartService.updateQuantity(
+                    jwtUser.getUserId(),
+                    productId,
+                    quantity
+            );
+
+            return ResponseEntity.ok(
+                    "Cart quantity updated successfully"
+            );
+
+        } catch (RuntimeException e) {
+
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(e.getMessage());
+        }
     }
 }
