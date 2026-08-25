@@ -13,6 +13,7 @@ import com.shoppingcart.DTO.CartResponse;
 import com.shoppingcart.model.Cart;
 import com.shoppingcart.model.CartItem;
 import com.shoppingcart.model.Product;
+import com.shoppingcart.model.ProductImage;
 import com.shoppingcart.model.User;
 import com.shoppingcart.repository.CartItemRepository;
 import com.shoppingcart.repository.CartRepository;
@@ -132,6 +133,14 @@ public class CartServiceImpl implements CartService{
 
                       dto.setTotal(total);
 
+                      List<String> imageUrls = product.getProductImages()
+                              .stream()
+                              .map(ProductImage::getImageUrl)
+                              .toList();
+
+                      dto.setImageUrls(imageUrls);
+
+                      
                       return dto;
                   })
                   .toList();
