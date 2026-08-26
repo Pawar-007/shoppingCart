@@ -2,6 +2,7 @@ package com.shoppingcart.controller;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,22 +16,11 @@ import com.shoppingcart.service.JwtService;
 @RequestMapping("/api/addresses")
 public class AddressController {
 
-    private final AddressService addressService;
-    private final JwtService jwtService;
-
-    public AddressController(
-            AddressService addressService,
-            JwtService jwtService) {
-
-        this.addressService = addressService;
-        this.jwtService = jwtService;
-    }
-
-
-    // =========================================================
-    // GET ALL USER ADDRESSES
-    // GET /api/addresses
-    // =========================================================
+	@Autowired
+    private AddressService addressService;
+	
+	@Autowired
+    private JwtService jwtService;
 
     @GetMapping
     public ResponseEntity<?> getUserAddresses(
@@ -104,9 +94,10 @@ public class AddressController {
             @RequestBody Address address) {
 
         try {
-
+            System.out.println("address" +address);
+            
             JwtUser jwtUser = getJwtUser(token);
-
+            System.out.println("user " +token);
             Address savedAddress =
                     addressService.addAddress(
                             jwtUser.getUserId(),
@@ -232,7 +223,7 @@ public class AddressController {
     // =========================================================
 
     private JwtUser getJwtUser(String token) {
-
+      
         if (token == null || token.isBlank()) {
 
             throw new RuntimeException(

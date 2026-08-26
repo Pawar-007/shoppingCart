@@ -1,6 +1,7 @@
 package com.shoppingcart.model;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.shoppingcart.enumerated.AddressType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -19,6 +20,7 @@ public class Address {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
 
     @Column(length = 100)
@@ -49,4 +51,21 @@ public class Address {
     private AddressType addressType;
 
     private Boolean isDefault=false;
+    
+//    @Override
+//    public String toString() {
+//    	  return "Address{" +
+//    	            "addressId=" + addressId +
+//    	            ", fullName='" + fullName + '\'' +
+//    	            ", phone='" + phone + '\'' +
+//    	            ", addressLine1='" + addressLine1 + '\'' +
+//    	            ", addressLine2='" + addressLine2 + '\'' +
+//    	            ", city='" + city + '\'' +
+//    	            ", state='" + state + '\'' +
+//    	            ", country='" + country + '\'' +
+//    	            ", pincode='" + pincode + '\'' +
+//    	            ", addressType=" + addressType +
+//    	            ", isDefault=" + isDefault +
+//    	            '}';
+//    }
 }

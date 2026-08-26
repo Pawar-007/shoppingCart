@@ -2,6 +2,7 @@ package com.shoppingcart.controller;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,17 +17,12 @@ import com.shoppingcart.service.OrderService;
 @RequestMapping("/orders")
 public class OrderController {
 
-    private final OrderService orderService;
-    private final JwtService jwtService;
+	@Autowired
+    private OrderService orderService;
+	@Autowired
+    private JwtService jwtService;
 
-    public OrderController(
-            OrderService orderService,
-            JwtService jwtService) {
-
-        this.orderService = orderService;
-        this.jwtService = jwtService;
-    }
-
+  
 
     // =========================================================
     // 1. PLACE ORDER
