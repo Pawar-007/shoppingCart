@@ -22,4 +22,14 @@ public class CartItem {
     private Product product;
 
     private Integer quantity;
+    
+    @Override
+    public String toString() {
+        return "CartItem{" +
+                "cartItemId=" + cartItemId +
+                ", cartId=" + (cart != null ? cart.getCartId() : null) +
+                ", productId=" + (product != null ? product.getProductId() : null) +
+                ", quantity=" + quantity +
+                '}';
+    }
 }

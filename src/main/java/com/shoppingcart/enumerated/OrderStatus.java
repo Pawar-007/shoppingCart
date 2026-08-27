@@ -1,9 +1,10 @@
 package com.shoppingcart.enumerated;
 
 public enum OrderStatus {
-	PENDING, 
-    PROCESSING, 
-    SHIPPED, 
-    DELIVERED, 
+	PENDING,
+    CONFIRMED,
+    SHIPPED,
+    OUT_FOR_DELIVERY,
+    DELIVERED,
     CANCELLED
 }

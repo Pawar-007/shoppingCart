@@ -162,21 +162,28 @@ public class OderServiceImpl implements OrderService{
         }
 
 
-        // 11. Selected CartItems remove
-        for (Long cartItemId : selectedCartItemIds) {
-
-            CartItem cartItem = cartItemRepository.findById(cartItemId)
-                    .orElseThrow(() ->
-                            new RuntimeException(
-                                    "Cart item not found with id: " + cartItemId));
-
-            if (!cartItem.getCart().getUser().getUserId().equals(userId)) {
-                throw new RuntimeException(
-                        "You are not authorized to remove this cart item");
-            }
-
-            cartItemRepository.delete(cartItem);
-        }
+		        // 11. Selected CartItems remove
+		        for (Long cartItemId : selectedCartItemIds) {
+		
+		            CartItem cartItem = cartItemRepository.findById(cartItemId)
+		                    .orElseThrow(() -> new RuntimeException("Cart item not found with id: " + cartItemId));
+		
+		            if (!cartItem.getCart().getUser().getUserId().equals(userId)) {
+		                throw new RuntimeException("You are not authorized to remove this cart item");
+		            }
+		
+		            // Parent ke collection se bhi remove karo — orphanRemoval ko trigger
+		            // karne ka sahi tarika, agar Cart entity persistence context mein
+		            // already loaded/managed hai to.
+		            Cart parentCart = cartItem.getCart();
+		            if (parentCart.getCartItems() != null) {
+		                parentCart.getCartItems().remove(cartItem);
+		            }
+		
+		            cartItemRepository.delete(cartItem);
+		        }
+		
+		        cartItemRepository.flush(); // turant DB pe apply karo, transaction end tak wait mat karo
 
 
         // 12. OrderDTO return
@@ -223,9 +230,10 @@ public class OderServiceImpl implements OrderService{
 	public List<OrderDTO> getActiveOrders(Long userId) {
 
 		List<OrderStatus> activeStatuses = List.of(
-	            OrderStatus.PENDING,
-	            OrderStatus.PROCESSING,
-	            OrderStatus.SHIPPED
+				OrderStatus.PENDING,
+	            OrderStatus.CONFIRMED,
+	            OrderStatus.SHIPPED,
+	            OrderStatus.OUT_FOR_DELIVERY
 	    );
 
 	    List<Order> orders =
