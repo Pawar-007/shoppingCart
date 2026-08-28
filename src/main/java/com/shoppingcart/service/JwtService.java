@@ -5,6 +5,7 @@ import java.util.Date;
 
 import javax.crypto.SecretKey;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.shoppingcart.DTO.JwtUser;
@@ -17,14 +18,14 @@ import io.jsonwebtoken.security.Keys;
 @Component
 public class JwtService {
 
-    private final String SECRET_KEY =
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30";
+	private final SecretKey secretKey;
 
-    private final SecretKey secretKey =
-            Keys.hmacShaKeyFor(
-                    SECRET_KEY.getBytes(StandardCharsets.UTF_8)
-            );
-    
+    public JwtService(@Value("${jwt.secret}") String secretKeyValue) {
+
+        this.secretKey = Keys.hmacShaKeyFor(
+                secretKeyValue.getBytes(StandardCharsets.UTF_8)
+        );
+    }
     public String generateToken(User user) {
 
         return Jwts.builder()
