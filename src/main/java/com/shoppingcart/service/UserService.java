@@ -4,6 +4,7 @@ import com.shoppingcart.DTO.LoginRequest;
 import com.shoppingcart.DTO.LoginResponse;
 import com.shoppingcart.DTO.RegisterResponse;
 import com.shoppingcart.model.User;
+import com.shoppingcart.DTO.*;
 
 public interface UserService {
 
@@ -21,4 +22,5 @@ public interface UserService {
 
     void deleteUser(Long userId);
     public RegisterResponse createAdmin(User user);
+
 }

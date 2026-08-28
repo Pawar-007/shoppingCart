@@ -1,5 +1,7 @@
 package com.shoppingcart.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +11,8 @@ import com.shoppingcart.DTO.JwtUser;
 import com.shoppingcart.DTO.LoginRequest;
 import com.shoppingcart.DTO.LoginResponse;
 import com.shoppingcart.DTO.RegisterResponse;
+import com.shoppingcart.DTO.UserProfileDTO;
+import com.shoppingcart.DTO.AddressDTO;
 import com.shoppingcart.enumerated.Role;
 import com.shoppingcart.model.User;
 import com.shoppingcart.service.JwtService;
@@ -119,7 +123,9 @@ public class UserController {
 
             User user = userService.getProfile(userId);
 
-            return ResponseEntity.ok(user);
+            UserProfileDTO dto = mapToUserProfileDTO(user);
+            
+            return ResponseEntity.ok(dto);
 
         } catch (RuntimeException e) {
 
@@ -129,6 +135,38 @@ public class UserController {
         }
     }
 
+    private UserProfileDTO mapToUserProfileDTO(User user) {
+
+        UserProfileDTO dto = new UserProfileDTO();
+
+        dto.setUserId(user.getUserId());
+        dto.setFirstName(user.getFirstName());
+        dto.setLastName(user.getLastName());
+        dto.setEmail(user.getEmail());
+        dto.setPhone(user.getPhone());
+        dto.setRole(user.getRole() != null ? user.getRole().toString() : null);
+
+        if (user.getAddresses() != null) {
+            List<AddressDTO> addressDTOs = user.getAddresses().stream()
+                    .map(addr -> new AddressDTO(
+                            addr.getAddressId(),
+                            addr.getFullName(),
+                            addr.getAddressLine1(),
+                            addr.getAddressLine2(),
+                            addr.getAddressType() != null ? addr.getAddressType().toString() : null,
+                            addr.getCity(),
+                            addr.getState(),
+                            addr.getPincode(),
+                            addr.getCountry(),
+                            addr.getPhone(),
+                            addr.getIsDefault()
+                    ))
+                    .toList();
+            dto.setAddresses(addressDTOs);
+        }
+
+        return dto;
+    }
 
 
     @PutMapping("/profile")
