@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.shoppingcart.DTO.OrderDTO;
+import com.shoppingcart.DTO.UserProfileDTO;
 import com.shoppingcart.enumerated.OrderStatus;
 import com.shoppingcart.model.Order;
 import com.shoppingcart.model.User;
@@ -29,7 +30,8 @@ public class AdminServiceImpl  implements AdminService{
 	@Override
 	public List<User> getAllUsers() {
 		
-		return userRepository.findAll();
+		List<User> users = userRepository.findAll();
+	    return users;
 	}
 	
 	

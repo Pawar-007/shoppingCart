@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.shoppingcart.DTO.OrderDTO;
+import com.shoppingcart.DTO.UserProfileDTO;
+import com.shoppingcart.mapper.UserMapper;
 import com.shoppingcart.model.User;
 import com.shoppingcart.service.AdminService;
 import com.shoppingcart.service.AuthService;
@@ -40,7 +42,9 @@ public class AdminController {
         }
 
         try {
-            return ResponseEntity.ok(adminService.getAllUsers());
+        	List<User> users = adminService.getAllUsers();
+            List<UserProfileDTO> dtoList = UserMapper.toDTOList(users);
+            return ResponseEntity.ok(dtoList);
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
