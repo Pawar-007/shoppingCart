@@ -83,44 +83,42 @@ public class OrderController {
     // =========================================================
 
     @GetMapping("/{orderId}")
-    public ResponseEntity<?> getOrderById(
-            @RequestHeader(value = "Authorization", required = false) String token,
-            @PathVariable Long orderId) {
-
-        try {
-
-            if (token == null || token.isBlank()) {
-                return ResponseEntity
-                        .status(HttpStatus.UNAUTHORIZED)
-                        .body("Authorization token is missing");
-            }
-
-            if (token.startsWith("Bearer ")) {
-                token = token.substring(7);
-            }
-
-            JwtUser jwtUser = jwtService.extractUser(token);
-
-            if (jwtUser == null) {
-                return ResponseEntity
-                        .status(HttpStatus.UNAUTHORIZED)
-                        .body("Invalid authorization token");
-            }
-
-            Long userId = jwtUser.getUserId();
-
-            OrderDTO order =
-                    orderService.getOrderById(userId, orderId);
-
-            return ResponseEntity.ok(order);
-
-        } catch (RuntimeException e) {
-
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(e.getMessage());
-        }
-    }
+		public ResponseEntity<?> getOrderById(
+		        @RequestHeader(value = "Authorization", required = false) String token,
+		        @PathVariable Long orderId) {
+		
+		    try {
+		
+		        if (token == null || token.isBlank()) {
+		            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authorization token is missing");
+		        }
+		
+		        if (token.startsWith("Bearer ")) {
+		            token = token.substring(7);
+		        }
+		
+		        JwtUser jwtUser = jwtService.extractUser(token);
+		
+		        if (jwtUser == null) {
+		            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid authorization token");
+		        }
+		
+		        OrderDTO order;
+		
+		        // Admin kisi bhi order ko dekh sakta hai, ownership check ke bina.
+		        // Customer ke liye purana ownership-checked flow hi chalega.
+		        if ("ADMIN".equals(jwtUser.getRole())) {
+		            order = orderService.getOrderByIdForAdmin(orderId);
+		        } else {
+		            order = orderService.getOrderById(jwtUser.getUserId(), orderId);
+		        }
+		
+		        return ResponseEntity.ok(order);
+		
+		    } catch (RuntimeException e) {
+		        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+		    }
+		}
 
 
     // =========================================================

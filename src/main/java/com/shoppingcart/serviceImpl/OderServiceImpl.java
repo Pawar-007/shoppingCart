@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.shoppingcart.DTO.CartItemDTO;
 import com.shoppingcart.DTO.CartResponse;
 import com.shoppingcart.DTO.OrderDTO;
+import com.shoppingcart.DTO.OrderItemDTO;
+import com.shoppingcart.DTO.UserProfileDTO;
 import com.shoppingcart.enumerated.OrderStatus;
 import com.shoppingcart.model.Address;
 import com.shoppingcart.model.Cart;
@@ -65,7 +67,7 @@ public class OderServiceImpl implements OrderService{
 		
 		
 		// 1. User find
-        User user=userServive.getProfile(userId);
+		User user=userServive.getProfile(userId);
         
 	    // 2. Cart find
         CartResponse cart=cartService.getCart(userId);
@@ -190,6 +192,8 @@ public class OderServiceImpl implements OrderService{
         return mapToOrderDTO(savedOrder);
 	}
 
+	// List views (My Orders, Active Orders, Place Order response) ke liye —
+	// items ki zaroorat nahi, isliye halka/fast rehta hai.
 	private OrderDTO mapToOrderDTO(Order order) {
 
 	    OrderDTO dto = new OrderDTO();
@@ -201,7 +205,27 @@ public class OderServiceImpl implements OrderService{
 
 	    return dto;
 	}
-	
+
+	// Order Details page ke liye — items ke saath poora data.
+	private OrderDTO mapToOrderDetailDTO(Order order) {
+
+	    OrderDTO dto = mapToOrderDTO(order);
+
+	    List<OrderItemDTO> itemDTOs = order.getOrderItems().stream()
+	            .map(oi -> new OrderItemDTO(
+	                    oi.getProduct().getProductId(),
+	                    oi.getProduct().getProductName(),
+	                    oi.getProduct().getDescription(),
+	                    oi.getPrice(),
+	                    oi.getQuantity(),
+	                    oi.getProduct().getProductImages()
+	            ))
+	            .toList();
+
+	    dto.setItems(itemDTOs);
+
+	    return dto;
+	}
 	@Override
 	public OrderDTO getOrderById(Long userId, Long orderId) {
 
@@ -212,7 +236,7 @@ public class OderServiceImpl implements OrderService{
 	                            "Order not found or you are not authorized to access this order"
 	                    ));
 
-	    return mapToOrderDTO(order);
+	    return mapToOrderDetailDTO(order);
 	}
 
 	@Override
@@ -287,6 +311,15 @@ public class OderServiceImpl implements OrderService{
 	    order.setOrderStatus(OrderStatus.CANCELLED);
 
 	    orderRepository.save(order);
+	}
+	
+	@Override
+	public OrderDTO getOrderByIdForAdmin(Long orderId) {
+
+	    Order order = orderRepository.findById(orderId)
+	            .orElseThrow(() -> new RuntimeException("Order not found"));
+
+	    return mapToOrderDetailDTO(order);  // wahi method jo items ke saath detail deta hai
 	}
 
 }

@@ -2,6 +2,7 @@ package com.shoppingcart.DTO;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.shoppingcart.enumerated.OrderStatus;
 
@@ -13,4 +14,5 @@ public class OrderDTO {
     private LocalDateTime orderDate;
     private BigDecimal totalAmount;
     private OrderStatus status;
+    private List<OrderItemDTO> items;
 }

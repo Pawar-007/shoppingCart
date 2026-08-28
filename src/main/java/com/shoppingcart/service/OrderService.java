@@ -24,4 +24,6 @@ public interface OrderService {
 
     // Order cancel karna
     void cancelOrder(Long userId, Long orderId);
+    
+    OrderDTO getOrderByIdForAdmin(Long orderId);
 }
